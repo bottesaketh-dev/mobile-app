@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Process Salary - {{ employee.full_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="glass-card p-4">
+            <h3 class="brand-font text-white mb-3">
+                <a href="{{ url_for('employees.salary_management', month=form.payment_month.data, year=form.payment_year.data) }}" class="text-saffron me-2 text-decoration-none"><i class="fa-solid fa-circle-arrow-left"></i></a>
+                Disburse Salary Payout
+            </h3>
+            <p class="text-muted small">Period: <strong>{{ month_name }} {{ year }}</strong> | Staff: <strong>{{ employee.full_name }}</strong> ({{ employee.position }})</p>
+            <hr class="border-secondary mb-4">
+            
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                
+                {{ form.payment_month(type="hidden") }}
+                {{ form.payment_year(type="hidden") }}
+                
+                <div class="mb-3">
+                    <label class="form-label" for="base_salary">{{ form.base_salary.label.text }}</label>
+                    {{ form.base_salary(class="form-control" + (" is-invalid" if form.base_salary.errors else "")) }}
+                    {% for error in form.base_salary.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="bonus">{{ form.bonus.label.text }}</label>
+                        {{ form.bonus(class="form-control" + (" is-invalid" if form.bonus.errors else ""), placeholder="0.00") }}
+                        {% for error in form.bonus.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="deductions">{{ form.deductions.label.text }}</label>
+                        {{ form.deductions(class="form-control" + (" is-invalid" if form.deductions.errors else ""), placeholder="0.00") }}
+                        {% for error in form.deductions.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="payment_status">{{ form.payment_status.label.text }}</label>
+                        {{ form.payment_status(class="form-select" + (" is-invalid" if form.payment_status.errors else "")) }}
+                        {% for error in form.payment_status.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3" id="payment-mode-container">
+                        <label class="form-label" for="payment_mode">{{ form.payment_mode.label.text }}</label>
+                        {{ form.payment_mode(class="form-select" + (" is-invalid" if form.payment_mode.errors else "")) }}
+                        {% for error in form.payment_mode.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="p-3 bg-dark bg-opacity-25 border border-secondary border-opacity-25 rounded-3 mb-4 d-flex justify-content-between align-items-center">
+                    <span class="text-muted fw-bold">Net Salary Payout:</span>
+                    <span class="text-saffron fw-bold fs-4" id="net-payout-val">₹0.00</span>
+                </div>
+                
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('employees.salary_management', month=form.payment_month.data, year=form.payment_year.data) }}" class="btn btn-outline-secondary px-4">Cancel</a>
+                    {{ form.submit(class="btn btn-saffron px-4") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const base = document.getElementById('base_salary');
+        const bonus = document.getElementById('bonus');
+        const ded = document.getElementById('deductions');
+        const display = document.getElementById('net-payout-val');
+        const statusSelect = document.getElementById('payment_status');
+        const modeContainer = document.getElementById('payment-mode-container');
+        
+        function calculate() {
+            let b = parseFloat(base.value) || 0;
+            let bo = parseFloat(bonus.value) || 0;
+            let d = parseFloat(ded.value) || 0;
+            let net = b + bo - d;
+            if (net < 0) net = 0;
+            display.innerText = '₹' + net.toFixed(2);
+        }
+        
+        function togglePaymentMode() {
+            if (statusSelect.value === 'paid') {
+                modeContainer.style.display = 'block';
+            } else {
+                modeContainer.style.display = 'none';
+            }
+        }
+        
+        if (base && bonus && ded) {
+            base.addEventListener('input', calculate);
+            bonus.addEventListener('input', calculate);
+            ded.addEventListener('input', calculate);
+            calculate();
+        }
+        
+        if (statusSelect) {
+            statusSelect.addEventListener('change', togglePaymentMode);
+            togglePaymentMode();
+        }
+    });
+</script>
+{% endblock %}

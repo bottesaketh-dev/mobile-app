@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice Receipt - {{ bill.bill_id }}{% endblock %}
+
+{% block styles %}
+<link href="{{ url_for('static', filename='css/billing.css') }}" rel="stylesheet">
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        #printable-receipt-area, #printable-receipt-area * {
+            visibility: visible;
+        }
+        #printable-receipt-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        .no-print {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6 text-center mb-4 no-print">
+        <h2 class="brand-font text-white">Invoice Settlement Completed</h2>
+        <p class="text-muted">Invoice <strong>{{ bill.bill_id }}</strong> has been successfully settled and logged.</p>
+        
+        <div class="d-flex justify-content-center gap-2 mt-3">
+            <a href="{{ url_for('billing.table_view') }}" class="btn btn-outline-warning">
+                <i class="fa-solid fa-house-chimney me-2"></i> POS Dashboard
+            </a>
+            <button onclick="window.print()" class="btn btn-outline-light">
+                <i class="fa-solid fa-print me-2"></i> Print Receipt
+            </button>
+            <a href="{{ url_for('billing.download_pdf', bill_id=bill.bill_id) }}" class="btn btn-saffron">
+                <i class="fa-solid fa-file-pdf me-2"></i> Download PDF
+            </a>
+        </div>
+    </div>
+    
+    <div class="col-12 mt-2">
+        <!-- Visual Receipt simulation paper -->
+        <div class="receipt-paper" id="printable-receipt-area">
+            <div class="text-center">
+                <h3 class="fw-bold mb-1">{{ bill.branch.name }}</h3>
+                <div class="small text-muted">{{ bill.branch.address or 'Indian Cuisine & Bar' }}</div>
+                <div class="small text-muted">Phone: {{ bill.branch.phone or 'N/A' }}</div>
+                <div class="my-3 border-top border-bottom py-1 text-uppercase fw-bold" style="letter-spacing: 2px;">Invoice Receipt</div>
+            </div>
+            
+            <div class="row small mb-3">
+                <div class="col-6">
+                    <div><strong>Bill No:</strong> {{ bill.bill_id }}</div>
+                    <div><strong>Table No:</strong> {{ bill.table.table_id }}</div>
+                    <div><strong>Cashier:</strong> {{ bill.biller.username }}</div>
+                </div>
+                <div class="col-6 text-end">
+                    <div><strong>Date:</strong> {{ bill.bill_date.strftime('%d-%m-%Y') }}</div>
+                    <div><strong>Time:</strong> {{ bill.bill_time.strftime('%I:%M %p') }}</div>
+                    <div><strong>Status:</strong> PAID</div>
+                </div>
+            </div>
+            
+            <table class="table table-sm border-top border-bottom small mb-3">
+                <thead>
+                    <tr>
+                        <th class="px-0">Item Description</th>
+                        <th class="text-end px-0" style="width: 50px;">Qty</th>
+                        <th class="text-end px-0" style="width: 80px;">Rate</th>
+                        <th class="text-end px-0" style="width: 80px;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in bill.order.items %}
+                        <tr>
+                            <td class="px-0 py-1">{{ item.menu_item.name }}</td>
+                            <td class="text-end px-0 py-1">{{ item.quantity }}</td>
+                            <td class="text-end px-0 py-1">₹{{ item.unit_price }}</td>
+                            <td class="text-end px-0 py-1">₹{{ item.total_price }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <div class="row small justify-content-end mb-2">
+                <div class="col-8 text-end">Subtotal:</div>
+                <div class="col-4 text-end fw-bold">₹{{ bill.subtotal }}</div>
+                
+                {% if bill.discount_amount > 0 %}
+                    <div class="col-8 text-end text-danger">Discount:</div>
+                    <div class="col-4 text-end text-danger fw-bold">-₹{{ bill.discount_amount }}</div>
+                {% endif %}
+                
+                <div class="col-8 text-end">GST Tax Amount:</div>
+                <div class="col-4 text-end fw-bold">₹{{ bill.tax_amount }}</div>
+                
+                <div class="col-8 text-end fs-6 fw-bold border-top pt-1 mt-1">Grand Total:</div>
+                <div class="col-4 text-end fs-6 fw-bold border-top pt-1 mt-1">₹{{ bill.total_amount }}</div>
+            </div>
+            
+            <div class="mt-4 border-top pt-3 text-center small">
+                <div class="text-uppercase fw-bold mb-1">Settled via: {{ bill.payment_mode }}</div>
+                {% if bill.notes %}
+                    <div class="text-muted mb-2">Ref: {{ bill.notes }}</div>
+                {% endif %}
+                <div class="text-muted italic">Thank you for dining with us!</div>
+                <div class="text-muted font-bold mt-1">Visit Again!</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

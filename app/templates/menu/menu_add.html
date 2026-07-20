@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk Add Menu Items - BlueFox Ledger{% endblock %}
+
+{% block content %}
+<div class="glass-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="brand-font text-white mb-0"><i class="fa-solid fa-folder-plus text-saffron me-2"></i> Bulk Add Menu Items</h3>
+        <button type="button" id="addRowBtn" class="btn btn-outline-light"><i class="fa-solid fa-plus me-2"></i>Add Row</button>
+    </div>
+    <hr class="border-secondary mb-4">
+    
+    <form method="POST" action="">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="table-responsive" style="overflow-x: visible;">
+            <table class="table table-dark table-hover border-secondary" id="bulkEntryTable">
+                <thead>
+                    <tr>
+                        <th style="min-width: 200px;">Item Name <span class="text-danger">*</span></th>
+                        <th style="min-width: 200px;">Description</th>
+                        <th style="min-width: 150px;">Category <span class="text-danger">*</span></th>
+                        <th style="min-width: 120px;">Price (₹) <span class="text-danger">*</span></th>
+                        <th style="min-width: 120px;">Veg?</th>
+                        <th style="min-width: 120px;">Available?</th>
+                        <th style="min-width: 150px;">Branch <span class="text-danger">*</span></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Initial Row -->
+                    <tr>
+                        <td>
+                            <input type="text" name="name[]" class="form-control form-control-sm" placeholder="e.g. Butter Naan" required>
+                        </td>
+                        <td>
+                            <input type="text" name="description[]" class="form-control form-control-sm" placeholder="Ingredients...">
+                        </td>
+                        <td>
+                            <select name="category[]" class="form-select form-select-sm" required>
+                                {% for cat in categories %}
+                                <option value="{{ cat }}">{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td>
+                            <input type="number" step="0.01" min="0" name="price[]" class="form-control form-control-sm" placeholder="0.00" required>
+                        </td>
+                        <td>
+                            <select name="is_vegetarian[]" class="form-select form-select-sm">
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select name="is_available[]" class="form-select form-select-sm">
+                                <option value="1" selected>Yes</option>
+                                <option value="0">No</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select name="branch_id[]" class="form-select form-select-sm" required>
+                                {% for branch in branches %}
+                                <option value="{{ branch.branch_id }}">{{ branch.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td class="text-center align-middle">
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Remove"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="d-flex justify-content-end gap-2 mt-4">
+            <a href="{{ url_for('menu.menu_list') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+            <button type="submit" class="btn btn-saffron px-4">Save All Items</button>
+        </div>
+    </form>
+</div>
+
+<!-- Template for new rows -->
+<template id="rowTemplate">
+    <tr>
+        <td>
+            <input type="text" name="name[]" class="form-control form-control-sm" placeholder="e.g. Butter Naan" required>
+        </td>
+        <td>
+            <input type="text" name="description[]" class="form-control form-control-sm" placeholder="Ingredients...">
+        </td>
+        <td>
+            <select name="category[]" class="form-select form-select-sm" required>
+                {% for cat in categories %}
+                <option value="{{ cat }}">{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td>
+            <input type="number" step="0.01" min="0" name="price[]" class="form-control form-control-sm" placeholder="0.00" required>
+        </td>
+        <td>
+            <select name="is_vegetarian[]" class="form-select form-select-sm">
+                <option value="0">No</option>
+                <option value="1">Yes</option>
+            </select>
+        </td>
+        <td>
+            <select name="is_available[]" class="form-select form-select-sm">
+                <option value="1" selected>Yes</option>
+                <option value="0">No</option>
+            </select>
+        </td>
+        <td>
+            <select name="branch_id[]" class="form-select form-select-sm" required>
+                {% for branch in branches %}
+                <option value="{{ branch.branch_id }}">{{ branch.name }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td class="text-center align-middle">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Remove"><i class="fa-solid fa-trash"></i></button>
+        </td>
+    </tr>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tableBody = document.getElementById('tableBody');
+    const addRowBtn = document.getElementById('addRowBtn');
+    const rowTemplate = document.getElementById('rowTemplate');
+
+    addRowBtn.addEventListener('click', function() {
+        const newRow = rowTemplate.content.cloneNode(true);
+        tableBody.appendChild(newRow);
+    });
+
+    tableBody.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-row')) {
+            const row = e.target.closest('tr');
+            if (tableBody.querySelectorAll('tr').length > 1) {
+                row.remove();
+            } else {
+                alert("You must have at least one row.");
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

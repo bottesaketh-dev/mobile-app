@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Tables Selection - BlueFox Ledger{% endblock %}
+
+{% block styles %}
+<link href="{{ url_for('static', filename='css/billing.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-4">
+    <div class="col-md-8">
+        <h2 class="brand-font text-white mb-0">POS Dining Tables</h2>
+        <p class="text-muted mb-0">Select an active table to take orders, view running carts, or process customer checkout.</p>
+    </div>
+    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <div class="d-inline-flex gap-2">
+            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 px-3 py-2"><i class="fa-solid fa-circle me-1"></i> Available</span>
+            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25 px-3 py-2"><i class="fa-solid fa-circle me-1"></i> Occupied</span>
+            <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-25 px-3 py-2"><i class="fa-solid fa-circle me-1"></i> Reserved</span>
+        </div>
+    </div>
+</div>
+
+{% if current_user.role == 'owner' %}
+<div class="glass-card p-3 mb-4 d-flex align-items-center justify-content-between">
+    <div class="text-white fw-bold">Active Branch Context</div>
+    <form class="d-flex" method="GET" action="{{ url_for('billing.table_view') }}">
+        <select name="branch_id" class="form-select form-select-sm me-2" onchange="this.form.submit()">
+            {% for branch in branches %}
+                <option value="{{ branch.branch_id }}" {% if branch.branch_id == selected_branch_id %}selected{% endif %}>
+                    {{ branch.name }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+{% endif %}
+
+<div class="glass-card p-4">
+    <div class="table-grid">
+        {% for table in tables %}
+            <a href="{{ url_for('billing.pos_interface', table_id=table.table_id) }}" class="table-card {{ table.status }}">
+                <i class="fa-solid fa-square-poll-horizontal"></i>
+                <div class="fw-bold fs-5">Table {{ table.table_id }}</div>
+                <div class="small text-muted">Cap: {{ table.capacity }} Seater</div>
+                <div class="mt-2 text-uppercase fw-bold" style="font-size: 0.65rem;">{{ table.status }}</div>
+            </a>
+        {% else %}
+            <div class="text-center text-muted py-5 w-100">
+                No active tables found for this branch. Please contact your manager to seed the database tables.
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

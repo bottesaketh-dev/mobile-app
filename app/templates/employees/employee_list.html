@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Employees Directory - BlueFox Ledger{% endblock %}
+
+{% block content %}
+<!-- Staff Tab Switcher -->
+<div class="mb-4">
+    <div class="d-inline-flex p-1 rounded-pill border border-secondary border-opacity-10" style="background-color: var(--border-color); padding: 4px; border-radius: 50px;">
+        <a href="{{ url_for('employees.employee_list') }}" class="btn btn-sm px-4 py-2 rounded-pill btn-saffron text-white" style="text-decoration: none; border-radius: 50px;">Employee List</a>
+        <a href="{{ url_for('employees.salary_management') }}" class="btn btn-sm px-4 py-2 rounded-pill text-muted" style="text-decoration: none; border-radius: 50px;">Payroll Processing</a>
+    </div>
+</div>
+
+<div class="row align-items-center mb-4">
+    <div class="col-md-6">
+        <h2 class="brand-font text-white mb-0">Employees Directory</h2>
+        <p class="text-muted mb-0">Onboard and manage staff roster details</p>
+    </div>
+    <div class="col-md-6 text-md-end mt-3 mt-md-0">
+        <a href="{{ url_for('employees.add_employee') }}" class="btn btn-saffron px-4">
+            <i class="fa-solid fa-user-plus me-2"></i> Onboard Staff
+        </a>
+    </div>
+</div>
+
+<!-- Filter Bar (Branch filter) -->
+<div class="glass-card p-3 mb-4">
+    <form method="GET" action="" class="row align-items-center g-3">
+        <div class="col-md-4">
+            <select name="branch_id" class="form-select border-secondary" onchange="this.form.submit()">
+                <option value="0">--- All Branches ---</option>
+                {% for b in branches %}
+                    <option value="{{ b.branch_id }}" {% if selected_branch_id == b.branch_id %}selected{% endif %}>{{ b.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-outline-warning w-100">Filter Branch</button>
+        </div>
+    </form>
+</div>
+
+<!-- Employees Log Table -->
+<div class="glass-card p-4">
+    <div class="table-responsive">
+        <table class="table table-custom mb-0">
+            <thead>
+                <tr>
+                    <th>Emp ID</th>
+                    <th>Full Name</th>
+                    <th>Job Position</th>
+                    <th>Contact</th>
+                    <th>Salary Rate</th>
+                    <th>Join Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for emp in employees %}
+                    <tr>
+                        <td class="fw-bold text-saffron">{{ emp.employee_id }}</td>
+                        <td class="text-white">{{ emp.full_name }}</td>
+                        <td><span class="badge bg-secondary bg-opacity-25 text-white border border-secondary border-opacity-25">{{ emp.position }}</span></td>
+                        <td>
+                            <div><i class="fa-solid fa-phone text-muted me-1 small"></i> {{ emp.phone }}</div>
+                            <small class="text-muted"><i class="fa-solid fa-envelope text-muted me-1 small"></i> {{ emp.email or 'N/A' }}</small>
+                        </td>
+                        <td class="fw-bold text-white">{{ emp.monthly_salary | currency }}</td>
+                        <td>{{ emp.join_date | date_format }}</td>
+                        <td>
+                            {% if emp.is_active %}
+                                <span class="badge badge-active">Active</span>
+                            {% else %}
+                                <span class="badge badge-inactive">Suspended</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <form method="POST" action="{{ url_for('employees.toggle_status', employee_id=emp.employee_id) }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                                        {% if emp.is_active %}
+                                            <i class="fa-solid fa-toggle-on me-1"></i> Suspend
+                                        {% else %}
+                                            <i class="fa-solid fa-toggle-off me-1"></i> Activate
+                                        {% endif %}
+                                    </button>
+                                </form>
+                                <a href="{{ url_for('employees.edit_employee', employee_id=emp.employee_id) }}" class="btn btn-sm btn-outline-light"><i class="fa-solid fa-user-pen"></i></a>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-5">No employees registered.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% include 'components/pagination.html' %}
+</div>
+{% endblock %}

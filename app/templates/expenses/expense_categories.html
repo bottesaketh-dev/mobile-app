@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Expense Categories - BlueFox Ledger{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-4">
+    <div class="col-12">
+        <h2 class="brand-font text-white mb-0">
+            <a href="{{ url_for('expenses.expense_list') }}" class="text-saffron me-2 text-decoration-none"><i class="fa-solid fa-circle-arrow-left"></i></a>
+            Expense Categories
+        </h2>
+        <p class="text-muted mb-0">Manage classifications for other outflows</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Add category form -->
+    <div class="col-md-5">
+        <div class="glass-card p-4">
+            <h5 class="text-white mb-4"><i class="fa-solid fa-folder-plus text-saffron me-2"></i> Create Classification</h5>
+            
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                
+                <div class="mb-3">
+                    <label class="form-label" for="name">{{ form.name.label.text }}</label>
+                    {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="e.g. Crockery") }}
+                    {% for error in form.name.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label" for="description">{{ form.description.label.text }}</label>
+                    {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=3, placeholder="Brief description...") }}
+                    {% for error in form.description.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                {{ form.submit(class="btn btn-saffron w-100 py-2") }}
+            </form>
+        </div>
+    </div>
+    
+    <!-- Right Column: Categories listing -->
+    <div class="col-md-7">
+        <div class="glass-card p-4">
+            <h5 class="text-white mb-4"><i class="fa-solid fa-list text-saffron me-2"></i> Existing Classifications</h5>
+            
+            <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cat in categories %}
+                            <tr>
+                                <td class="fw-bold text-white">{{ cat.name }}</td>
+                                <td class="text-muted">{{ cat.description or 'N/A' }}</td>
+                                <td>
+                                    {% if cat.is_active %}
+                                        <span class="badge badge-active">Active</span>
+                                    {% else %}
+                                        <span class="badge badge-inactive">Inactive</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">No categories created.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

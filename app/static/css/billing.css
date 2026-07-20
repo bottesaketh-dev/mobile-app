@@ -1,0 +1,200 @@
+/* Table Grid View */
+.table-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.table-card {
+    height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-radius: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--text-main);
+    transition: all 0.3s ease;
+}
+
+.table-card i {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.table-card.available {
+    background: rgba(39, 174, 96, 0.08);
+    border: 1px solid rgba(39, 174, 96, 0.2);
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.03);
+}
+.table-card.available:hover {
+    background: rgba(39, 174, 96, 0.15);
+    border-color: rgba(39, 174, 96, 0.4);
+    box-shadow: 0 4px 20px rgba(39, 174, 96, 0.1);
+    transform: translateY(-5px);
+}
+
+.table-card.occupied {
+    background: rgba(192, 57, 43, 0.08);
+    border: 1px solid rgba(192, 57, 43, 0.2);
+    box-shadow: 0 4px 15px rgba(192, 57, 43, 0.03);
+}
+.table-card.occupied:hover {
+    background: rgba(192, 57, 43, 0.15);
+    border-color: rgba(192, 57, 43, 0.4);
+    box-shadow: 0 4px 20px rgba(192, 57, 43, 0.1);
+    transform: translateY(-5px);
+}
+
+.table-card.reserved {
+    background: rgba(52, 152, 219, 0.08);
+    border: 1px solid rgba(52, 152, 219, 0.2);
+}
+
+/* POS Layout split screen */
+.pos-container {
+    display: flex;
+    height: calc(100vh - 120px);
+    gap: 20px;
+}
+
+.pos-menu-section {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    overflow-y: hidden;
+}
+
+.pos-cart-section {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid rgba(0, 0, 0, 0.06);
+    padding-left: 20px;
+    height: 100%;
+}
+
+.category-scroll {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    scrollbar-width: thin;
+}
+
+.category-scroll::-webkit-scrollbar {
+    height: 4px;
+}
+.category-scroll::-webkit-scrollbar-thumb {
+    background-color: var(--primary-color);
+    border-radius: 4px;
+}
+
+.category-pill {
+    white-space: nowrap;
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 20px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.category-pill.active, .category-pill:hover {
+    background: var(--primary-color);
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.pos-items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 15px;
+    overflow-y: auto;
+    padding: 10px 5px;
+    flex: 1;
+}
+
+.pos-item-card {
+    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    border-radius: 12px;
+    padding: 15px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 130px;
+    transition: all 0.2s ease;
+}
+
+.pos-item-card:hover {
+    background: rgba(211, 84, 0, 0.05);
+    border-color: rgba(211, 84, 0, 0.25);
+    transform: translateY(-2px);
+}
+
+.cart-items-list {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    padding-right: 5px;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.01);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.qty-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.qty-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: transparent;
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.qty-btn:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #ffffff;
+}
+
+/* Receipt styles */
+.receipt-paper {
+    background: #fff;
+    color: #333;
+    padding: 30px;
+    font-family: 'Courier New', Courier, monospace;
+    max-width: 450px;
+    margin: 0 auto;
+    border-radius: 2px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+.receipt-paper th, .receipt-paper td {
+    color: #333 !important;
+    border-color: #ddd !important;
+}

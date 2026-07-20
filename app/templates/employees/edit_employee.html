@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Employee Records - BlueFox Ledger{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="glass-card p-4">
+            <h3 class="brand-font text-white mb-4"><i class="fa-solid fa-user-pen text-saffron me-2"></i> Update Employee Records</h3>
+            <p class="text-muted small">Modifying details for: <strong>{{ employee.full_name }}</strong> (ID: {{ employee.employee_id }})</p>
+            <hr class="border-secondary mb-4">
+            
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="first_name">{{ form.first_name.label.text }}</label>
+                        {{ form.first_name(class="form-control" + (" is-invalid" if form.first_name.errors else "")) }}
+                        {% for error in form.first_name.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="last_name">{{ form.last_name.label.text }}</label>
+                        {{ form.last_name(class="form-control" + (" is-invalid" if form.last_name.errors else "")) }}
+                        {% for error in form.last_name.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="email">{{ form.email.label.text }}</label>
+                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                        {% for error in form.email.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="phone">{{ form.phone.label.text }}</label>
+                        {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else "")) }}
+                        {% for error in form.phone.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="position">{{ form.position.label.text }}</label>
+                        {{ form.position(class="form-control" + (" is-invalid" if form.position.errors else "")) }}
+                        {% for error in form.position.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="monthly_salary">{{ form.monthly_salary.label.text }}</label>
+                        {{ form.monthly_salary(class="form-control" + (" is-invalid" if form.monthly_salary.errors else "")) }}
+                        {% for error in form.monthly_salary.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label" for="join_date">{{ form.join_date.label.text }}</label>
+                        {{ form.join_date(class="form-control" + (" is-invalid" if form.join_date.errors else ""), type="date") }}
+                        {% for error in form.join_date.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label" for="branch_id">{{ form.branch_id.label.text }}</label>
+                        {{ form.branch_id(class="form-select" + (" is-invalid" if form.branch_id.errors else "")) }}
+                        {% for error in form.branch_id.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('employees.employee_list') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+                    {{ form.submit(class="btn btn-saffron px-4") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Cashflow Summary - BlueFox Ledger{% endblock %}
+
+{% block content %}
+<!-- Reports Tab Switcher -->
+<div class="mb-4">
+    <div class="d-inline-flex p-1 rounded-pill border border-secondary border-opacity-10" style="background-color: var(--border-color); padding: 4px; border-radius: 50px;">
+        {% if current_user.is_owner %}
+            <a href="{{ url_for('reports.monthly_report') }}" class="btn btn-sm px-4 py-2 rounded-pill text-muted" style="text-decoration: none; border-radius: 50px;">Monthly P&L</a>
+        {% endif %}
+        <a href="{{ url_for('reports.daily_report') }}" class="btn btn-sm px-4 py-2 rounded-pill text-muted" style="text-decoration: none; border-radius: 50px;">Daily Revenue</a>
+        <a href="{{ url_for('reports.cashflow_overview') }}" class="btn btn-sm px-4 py-2 rounded-pill btn-saffron text-white" style="text-decoration: none; border-radius: 50px;">Cashflow Summary</a>
+        <a href="{{ url_for('reports.grocery_trends') }}" class="btn btn-sm px-4 py-2 rounded-pill text-muted" style="text-decoration: none; border-radius: 50px;">Grocery Trends</a>
+    </div>
+</div>
+
+<div class="row align-items-center mb-4">
+    <div class="col-md-6">
+        <h2 class="brand-font text-white mb-0">Cashflow Statements Summary</h2>
+        <p class="text-muted mb-0">Track exact cash flow in and out of the restaurant business</p>
+    </div>
+    
+    <div class="col-md-6 text-md-end mt-3 mt-md-0">
+        <a href="{{ url_for('reports.export_csv', start_date=start_date, end_date=end_date, branch_id=selected_branch_id) }}" class="btn btn-saffron px-4">
+            <i class="fa-solid fa-file-csv me-2"></i> Export CSV Statement
+        </a>
+    </div>
+</div>
+
+<!-- Date and Branch Filter Form -->
+<div class="glass-card p-3 mb-4">
+    <form method="GET" action="" class="row align-items-end g-3">
+        <!-- Start Date -->
+        <div class="col-md-3">
+            <label class="form-label mb-1 text-muted small">Start Date</label>
+            <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+        </div>
+        
+        <!-- End Date -->
+        <div class="col-md-3">
+            <label class="form-label mb-1 text-muted small">End Date</label>
+            <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+        </div>
+        
+        <!-- Branch (Owner only) -->
+        {% if current_user.is_owner %}
+            <div class="col-md-4">
+                <label class="form-label mb-1 text-muted small">Branch Location</label>
+                <select name="branch_id" class="form-select border-secondary">
+                    <option value="0">--- All Branches Combined ---</option>
+                    {% for b in branches %}
+                        <option value="{{ b.branch_id }}" {% if selected_branch_id == b.branch_id %}selected{% endif %}>{{ b.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        {% endif %}
+        
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-outline-warning w-100 py-2">Apply Filters</button>
+        </div>
+    </form>
+</div>
+
+<!-- Summary Cards Grid -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="glass-card p-4 border-start border-success border-4 h-100">
+            <div class="text-muted small uppercase fw-bold mb-1">Total Inflow (Sales)</div>
+            <h3 class="text-success brand-font fs-3 m-0">{{ summary.inflow | currency }}</h3>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="glass-card p-4 border-start border-danger border-4 h-100">
+            <div class="text-muted small uppercase fw-bold mb-1">Total Outflow</div>
+            <h3 class="text-danger brand-font fs-3 m-0">{{ summary.total_outflow | currency }}</h3>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="glass-card p-4 border-start border-warning border-4 h-100">
+            <div class="text-muted small uppercase fw-bold mb-1">Net Flow Margin</div>
+            <h3 class="text-warning brand-font fs-3 m-0">{{ summary.net_cashflow | currency }}</h3>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed cash breakdown panel -->
+<div class="glass-card p-4 mb-4">
+    <h5 class="text-white mb-4"><i class="fa-solid fa-scale-balanced text-saffron me-2"></i> Detailed Cashflow Breakdown</h5>
+    
+    <div class="table-responsive">
+        <table class="table table-custom">
+            <thead>
+                <tr>
+                    <th>Ledger Type</th>
+                    <th>Classification/Stream</th>
+                    <th class="text-end">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Inflow -->
+                <tr>
+                    <td class="text-success fw-bold"><i class="fa-solid fa-circle-arrow-up me-2"></i> INFLOW</td>
+                    <td class="text-white">Customer Sales & POS billing</td>
+                    <td class="text-success text-end fw-bold">{{ summary.inflow | currency }}</td>
+                </tr>
+                
+                <!-- Outflow Groceries -->
+                <tr>
+                    <td class="text-danger fw-bold"><i class="fa-solid fa-circle-arrow-down me-2"></i> OUTFLOW</td>
+                    <td class="text-white">Kitchen Groceries Procurement</td>
+                    <td class="text-danger text-end fw-bold">{{ summary.outflow_groceries | currency }}</td>
+                </tr>
+                
+                <!-- Outflow General Expenses -->
+                <tr>
+                    <td class="text-danger fw-bold"><i class="fa-solid fa-circle-arrow-down me-2"></i> OUTFLOW</td>
+                    <td class="text-white">Other General Expenses (Utilities, Rent, Marketing)</td>
+                    <td class="text-danger text-end fw-bold">{{ summary.outflow_expenses | currency }}</td>
+                </tr>
+                
+                <!-- Outflow Salaries -->
+                <tr>
+                    <td class="text-danger fw-bold"><i class="fa-solid fa-circle-arrow-down me-2"></i> OUTFLOW</td>
+                    <td class="text-white">Processed Employee Salary Payouts</td>
+                    <td class="text-danger text-end fw-bold">{{ summary.outflow_salaries | currency }}</td>
+                </tr>
+                
+                <!-- Summary row -->
+                <tr class="border-top border-secondary">
+                    <td colspan="2" class="fw-bold fs-5 text-white">Net Operating Profit Margin:</td>
+                    <td class="text-warning text-end fw-bold fs-5">{{ summary.net_cashflow | currency }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

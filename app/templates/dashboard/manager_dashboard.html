@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Branch Manager Dashboard - BlueFox Ledger{% endblock %}
+
+{% block styles %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-4">
+    <div class="col-md-6">
+        <h2 class="brand-font text-white mb-0">Manager Dashboard</h2>
+        <p class="text-muted mb-0">Today's Financial Overview &middot; <strong class="text-saffron">{{
+                today_date.strftime('%d %b, %Y') }}</strong></p>
+    </div>
+    <div class="col-md-6 text-md-end mt-3 mt-md-0">
+        <p class="text-muted mb-0">Active Location: <strong class="text-white">{{ branch.name }}</strong></p>
+    </div>
+</div>
+
+<input type="hidden" id="selected-branch-id" value="{{ branch.branch_id }}">
+
+<!-- KPI Cards -->
+<div class="kpi-grid mb-4">
+    <!-- Branch Inflow -->
+    <div
+        class="glass-card kpi-card inflow border-start border-success border-4 p-4 position-relative overflow-hidden group">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                <p class="text-muted small uppercase tracking-wider mb-1">Today's Inflow</p>
+                <h3 class="brand-font fs-3 text-success mt-1">{{ summary.inflow | currency }}</h3>
+            </div>
+            <div class="p-2 bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
+                style="width: 40px; height: 40px;">
+                <i class="fa-solid fa-arrow-down text-success"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Branch Outflow -->
+    <div
+        class="glass-card kpi-card outflow border-start border-danger border-4 p-4 position-relative overflow-hidden group">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                <p class="text-muted small uppercase tracking-wider mb-1">Today's Outflow</p>
+                <h3 class="brand-font fs-3 text-danger mt-1">{{ summary.total_outflow | currency }}</h3>
+            </div>
+            <div class="p-2 bg-danger bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
+                style="width: 40px; height: 40px;">
+                <i class="fa-solid fa-arrow-up text-danger"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Branch Net Cashflow -->
+    <div class="glass-card kpi-card netflow border-start border-warning border-4 p-4 position-relative overflow-hidden group">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                <p class="text-muted small uppercase tracking-wider mb-1">Today's Net Cashflow</p>
+                <h3 class="brand-font fs-3 text-saffron mt-1 fw-bold">{{ summary.net_cashflow | currency }}</h3>
+            </div>
+            <div class="p-2 bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                <i class="fa-solid fa-building-columns text-saffron"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Tables Section -->
+<div class="row mb-5">
+    <!-- Latest Bills -->
+    <div class="col-xl-6 mb-4 mb-xl-0">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="text-white mb-0"><i class="fa-solid fa-receipt text-saffron me-2"></i> Latest Bills</h5>
+                <a href="{{ url_for('reports.daily_report') }}" class="btn btn-outline-warning btn-sm">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th>Bill No.</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Table/Type</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in recent_bills %}
+                        <tr>
+                            <td class="fw-bold text-saffron">#{{ b.bill_id }}</td>
+                            <td>{{ b.created_at.strftime('%d %b, %Y') }}</td>
+                            <td>{{ b.created_at.strftime('%H:%M') }}</td>
+                            <td>
+                                {% if b.table %}
+                                <div class="d-inline-block w-2 h-2 rounded-circle bg-success me-1"></div> T-{{
+                                b.table.table_id }} (Dine-in)
+                                {% else %}
+                                <div class="d-inline-block w-2 h-2 rounded-circle bg-primary me-1"></div> Takeaway
+                                {% endif %}
+                            </td>
+                            <td class="text-success text-end fw-bold">{{ b.total_amount | currency }}</td>
+                            <td class="text-center">
+                                <span class="badge badge-active">Paid</span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No recent bills found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Opex -->
+    <div class="col-xl-6">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="text-white mb-0"><i class="fa-solid fa-basket-shopping text-saffron me-2"></i> Recent Opex
+                </h5>
+                <a href="{{ url_for('expenses.expense_list') }}" class="btn btn-outline-warning btn-sm">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th>Vendor</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Category</th>
+                            <th class="text-end">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for e in recent_expenses %}
+                        <tr>
+                            <td class="fw-bold text-white">{{ e.vendor_name or "N/A" }}</td>
+                            <td>{{ e.expense_date.strftime('%d %b, %Y') }}</td>
+                            <td>{{ e.expense_time.strftime('%H:%M') }}</td>
+                            <td><span
+                                    class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">{{
+                                    e.category.name }}</span></td>
+                            <td class="text-danger text-end fw-bold">{{ e.amount | currency }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">No recent expenses found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Log Grocery Purchase - BlueFox Ledger{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="brand-font text-white mb-0"><i class="fa-solid fa-basket-shopping text-saffron me-2"></i> Log Grocery Purchase</h3>
+                <a href="{{ url_for('expenses.add_grocery_item') }}" class="btn btn-sm btn-outline-warning"><i class="fa-solid fa-plus me-1"></i> New Item Profile</a>
+            </div>
+            <hr class="border-secondary mb-4">
+            
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="purchase_date">{{ form.purchase_date.label.text }}</label>
+                        {{ form.purchase_date(class="form-control" + (" is-invalid" if form.purchase_date.errors else ""), type="date") }}
+                        {% for error in form.purchase_date.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="purchase_time">{{ form.purchase_time.label.text }}</label>
+                        {{ form.purchase_time(class="form-control" + (" is-invalid" if form.purchase_time.errors else ""), type="time") }}
+                        {% for error in form.purchase_time.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="grocery_item_id">{{ form.grocery_item_id.label.text }}</label>
+                        {{ form.grocery_item_id(class="form-select" + (" is-invalid" if form.grocery_item_id.errors else "")) }}
+                        {% for error in form.grocery_item_id.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="branch_id">{{ form.branch_id.label.text }}</label>
+                        {{ form.branch_id(class="form-select" + (" is-invalid" if form.branch_id.errors else "")) }}
+                        {% for error in form.branch_id.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="quantity">{{ form.quantity.label.text }}</label>
+                        {{ form.quantity(class="form-control" + (" is-invalid" if form.quantity.errors else ""), placeholder="0.00") }}
+                        {% for error in form.quantity.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="unit_price">{{ form.unit_price.label.text }}</label>
+                        {{ form.unit_price(class="form-control" + (" is-invalid" if form.unit_price.errors else ""), placeholder="0.00") }}
+                        {% for error in form.unit_price.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label" for="vendor_name">{{ form.vendor_name.label.text }}</label>
+                    {{ form.vendor_name(class="form-control" + (" is-invalid" if form.vendor_name.errors else ""), placeholder="e.g. Metro WholeFoods Local") }}
+                    {% for error in form.vendor_name.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label" for="notes">{{ form.notes.label.text }}</label>
+                    {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else ""), rows=2, placeholder="Add grocery brand details or invoice refs...") }}
+                    {% for error in form.notes.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="p-3 bg-dark bg-opacity-25 border border-secondary border-opacity-25 rounded-3 mb-4 d-flex justify-content-between align-items-center">
+                    <span class="text-muted fw-bold">Estimated Cost:</span>
+                    <span class="text-saffron fw-bold fs-4" id="calc-total-spend">₹0.00</span>
+                </div>
+                
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('expenses.grocery_list') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+                    {{ form.submit(class="btn btn-saffron px-4") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const qty = document.getElementById('quantity');
+        const price = document.getElementById('unit_price');
+        const display = document.getElementById('calc-total-spend');
+        
+        function calculate() {
+            let q = parseFloat(qty.value) || 0;
+            let p = parseFloat(price.value) || 0;
+            let total = q * p;
+            display.innerText = '₹' + total.toFixed(2);
+        }
+        
+        if (qty && price) {
+            qty.addEventListener('input', calculate);
+            price.addEventListener('input', calculate);
+        }
+    });
+</script>
+{% endblock %}

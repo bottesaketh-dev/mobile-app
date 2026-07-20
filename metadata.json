@@ -1,0 +1,8 @@
+{
+  "name": "BlueFox Ledger",
+  "description": "Multi-role restaurant management, POS billing, expense, and cashflow tracking system.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Menu Management - BlueFox Ledger{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-4">
+    <div class="col-md-6">
+        <h2 class="brand-font text-white mb-0">Menu Catalog</h2>
+        <p class="text-muted mb-0">Browse and manage dishes across categories</p>
+    </div>
+    
+    {% if current_user.role in ('owner', 'branch_manager') %}
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+            <a href="{{ url_for('menu.add_item') }}" class="btn btn-saffron px-4">
+                <i class="fa-solid fa-plus me-2"></i> Add Menu Item
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Filters Bar -->
+<div class="glass-card p-3 mb-4">
+    <form method="GET" action="" class="row align-items-center g-3">
+        <!-- Search -->
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input type="text" name="search" class="form-control" placeholder="Search dish name..." value="{{ search_query }}">
+            </div>
+        </div>
+        
+        <!-- Category Selector -->
+        <div class="col-md-4">
+            <select name="category" class="form-select border-secondary" onchange="this.form.submit()">
+                <option value="">--- All Categories ---</option>
+                {% for cat in categories %}
+                    <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Branch Selector (Owner only) -->
+        {% if current_user.is_owner %}
+            <div class="col-md-3">
+                <select name="branch_id" class="form-select border-secondary" onchange="this.form.submit()">
+                    <option value="0">--- All Branches ---</option>
+                    {% for b in branches %}
+                        <option value="{{ b.branch_id }}" {% if selected_branch_id == b.branch_id %}selected{% endif %}>{{ b.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        {% endif %}
+        
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-outline-warning w-100">Filter</button>
+        </div>
+    </form>
+</div>
+
+<!-- Menu list -->
+<div class="glass-card p-4">
+    <div class="table-responsive">
+        <table class="table table-custom mb-0">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Dish Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    {% if current_user.is_owner %}
+                        <th>Branch</th>
+                    {% endif %}
+                    <th>Status</th>
+                    {% if current_user.role in ('owner', 'branch_manager') %}
+                        <th>Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in menu_items %}
+                    <tr>
+                        <td>
+                            {% if item.is_vegetarian %}
+                                <span class="veg-indicator" title="Vegetarian"><span class="veg-dot"></span></span>
+                            {% else %}
+                                <span class="nonveg-indicator" title="Non-Vegetarian"><span class="nonveg-dot"></span></span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold text-white">{{ item.name }}</td>
+                        <td><span class="badge bg-secondary bg-opacity-25 text-white border border-secondary border-opacity-25">{{ item.category }}</span></td>
+                        <td class="fw-bold text-saffron">{{ item.price | currency }}</td>
+                        {% if current_user.is_owner %}
+                            <td>{{ item.branch.name }}</td>
+                        {% endif %}
+                        <td>
+                            {% if item.is_available %}
+                                <span class="badge badge-active">Available</span>
+                            {% else %}
+                                <span class="badge badge-inactive">Unavailable</span>
+                            {% endif %}
+                        </td>
+                        {% if current_user.role in ('owner', 'branch_manager') %}
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <form method="POST" action="{{ url_for('menu.toggle_availability', item_id=item.menu_item_id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-warning">
+                                            {% if item.is_available %}
+                                                <i class="fa-solid fa-toggle-on me-1"></i> Disable
+                                            {% else %}
+                                                <i class="fa-solid fa-toggle-off me-1"></i> Enable
+                                            {% endif %}
+                                        </button>
+                                    </form>
+                                    <a href="{{ url_for('menu.edit_item', item_id=item.menu_item_id) }}" class="btn btn-sm btn-outline-light"><i class="fa-solid fa-pen-to-square"></i></a>
+                                </div>
+                            </td>
+                        {% endif %}
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-5">No menu items found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Include Pagination Component -->
+    {% include 'components/pagination.html' %}
+</div>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Salary Processor - BlueFox Ledger{% endblock %}
+
+{% block content %}
+<!-- Staff Tab Switcher -->
+<div class="mb-4">
+    <div class="d-inline-flex p-1 rounded-pill border border-secondary border-opacity-10" style="background-color: var(--border-color); padding: 4px; border-radius: 50px;">
+        <a href="{{ url_for('employees.employee_list') }}" class="btn btn-sm px-4 py-2 rounded-pill text-muted" style="text-decoration: none; border-radius: 50px;">Employee List</a>
+        <a href="{{ url_for('employees.salary_management') }}" class="btn btn-sm px-4 py-2 rounded-pill btn-saffron text-white" style="text-decoration: none; border-radius: 50px;">Payroll Processing</a>
+    </div>
+</div>
+
+<div class="row align-items-center mb-4">
+    <div class="col-12">
+        <h2 class="brand-font text-white mb-0">Monthly Payroll Processor</h2>
+        <p class="text-muted mb-0">Record, authorize, and review employee monthly salary outflows</p>
+    </div>
+</div>
+
+<!-- Period Filter Box -->
+<div class="glass-card p-3 mb-4">
+    <form method="GET" action="" class="row align-items-center g-3">
+        <!-- Month -->
+        <div class="col-md-3">
+            <label class="form-label mb-1 text-muted small">Select Month</label>
+            <select name="month" class="form-select border-secondary" onchange="this.form.submit()">
+                {% for m, name in months %}
+                    <option value="{{ m }}" {% if selected_month == m %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Year -->
+        <div class="col-md-3">
+            <label class="form-label mb-1 text-muted small">Select Year</label>
+            <select name="year" class="form-select border-secondary" onchange="this.form.submit()">
+                {% for y in years %}
+                    <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Branch -->
+        <div class="col-md-4">
+            <label class="form-label mb-1 text-muted small">Select Branch</label>
+            <select name="branch_id" class="form-select border-secondary" onchange="this.form.submit()">
+                <option value="0">--- All Branches ---</option>
+                {% for b in branches %}
+                    <option value="{{ b.branch_id }}" {% if selected_branch_id == b.branch_id %}selected{% endif %}>{{ b.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="col-md-2 align-self-end">
+            <button type="submit" class="btn btn-outline-warning w-100 py-2">Filter Payroll</button>
+        </div>
+    </form>
+</div>
+
+<!-- Employees Payroll Grid -->
+<div class="glass-card p-4">
+    <div class="table-responsive">
+        <table class="table table-custom mb-0">
+            <thead>
+                <tr>
+                    <th>Emp ID</th>
+                    <th>Staff Name</th>
+                    <th>Job Position</th>
+                    <th>Monthly Base</th>
+                    <th>Status</th>
+                    <th>Net Payout</th>
+                    <th>Disbursement Ref</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in payroll_data %}
+                    <tr>
+                        <td class="fw-bold text-saffron">{{ item.employee.employee_id }}</td>
+                        <td class="text-white">{{ item.employee.full_name }}</td>
+                        <td><span class="badge bg-secondary bg-opacity-25 text-white border border-secondary border-opacity-25">{{ item.employee.position }}</span></td>
+                        <td class="fw-bold">{{ item.employee.monthly_salary | currency }}</td>
+                        <td>
+                            {% if item.payment and item.payment.payment_status == 'paid' %}
+                                <span class="badge badge-active"><i class="fa-solid fa-circle-check me-1"></i> PAID</span>
+                            {% else %}
+                                <span class="badge badge-inactive"><i class="fa-solid fa-circle-exclamation me-1"></i> UNPAID</span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold {% if item.payment and item.payment.payment_status == 'paid' %}text-danger{% else %}text-muted{% endif %}">
+                            {% if item.payment %}
+                                {{ item.payment.net_salary | currency }}
+                            {% else %}
+                                {{ item.employee.monthly_salary | currency }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.payment and item.payment.payment_status == 'paid' %}
+                                <div class="small">Date: {{ item.payment.payment_date | date_format }}</div>
+                                <div class="text-muted small">Via: {{ item.payment.payment_mode.upper() }}</div>
+                            {% else %}
+                                <span class="text-muted small">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.payment and item.payment.payment_status == 'paid' %}
+                                <a href="{{ url_for('employees.process_salary', employee_id=item.employee.employee_id, month=selected_month, year=selected_year) }}" class="btn btn-sm btn-outline-light"><i class="fa-solid fa-receipt me-1"></i> View / Edit</a>
+                            {% else %}
+                                <a href="{{ url_for('employees.process_salary', employee_id=item.employee.employee_id, month=selected_month, year=selected_year) }}" class="btn btn-sm btn-saffron"><i class="fa-solid fa-credit-card me-1"></i> Pay Salary</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-5">No employees found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

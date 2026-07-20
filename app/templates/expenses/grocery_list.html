@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Grocery Purchases Ledger - BlueFox Ledger{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-4">
+    <div class="col-md-6">
+        <h2 class="brand-font text-white mb-0">Groceries Procurement Logs</h2>
+        <p class="text-muted mb-0">Record and review kitchen grocery purchase expenditures</p>
+    </div>
+    <div class="col-md-6 text-md-end mt-3 mt-md-0">
+        <div class="d-flex justify-content-md-end gap-2 flex-wrap">
+            <a href="{{ url_for('expenses.add_grocery_item') }}" class="btn btn-outline-warning">
+                <i class="fa-solid fa-folder-plus me-2"></i> Add Grocery Item
+            </a>
+            <a href="{{ url_for('expenses.bulk_grocery_purchase') }}" class="btn btn-warning">
+                <i class="fa-solid fa-boxes-stacked me-2"></i> Bulk Purchase
+            </a>
+            <a href="{{ url_for('expenses.add_grocery_purchase') }}" class="btn btn-saffron">
+                <i class="fa-solid fa-cart-plus me-2"></i> Log Single Purchase
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Bar (Owner only) -->
+{% if current_user.is_owner %}
+    <div class="glass-card p-3 mb-4">
+        <form method="GET" action="" class="row align-items-center g-3">
+            <div class="col-md-4">
+                <select name="branch_id" class="form-select border-secondary" onchange="this.form.submit()">
+                    <option value="0">--- All Branches Combined ---</option>
+                    {% for b in branches %}
+                        <option value="{{ b.branch_id }}" {% if selected_branch_id == b.branch_id %}selected{% endif %}>{{ b.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-warning w-100">Filter Branch</button>
+            </div>
+        </form>
+    </div>
+{% endif %}
+
+<!-- Grocery Purchase Log Table -->
+<div class="glass-card p-4">
+    <div class="table-responsive">
+        <table class="table table-custom mb-0">
+            <thead>
+                <tr>
+                    <th>Date / Time</th>
+                    <th>Product ID</th>
+                    <th>Product Name</th>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th>Total Spent</th>
+                    <th>Vendor</th>
+                    <th>Logged By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in purchases %}
+                    <tr>
+                        <td>
+                            <div>{{ p.purchase_date | date_format }}</div>
+                            <small class="text-muted">{{ p.purchase_time.strftime('%I:%M %p') }}</small>
+                        </td>
+                        <td class="fw-bold text-white small">{{ p.grocery_item.product_id }}</td>
+                        <td class="text-white">{{ p.grocery_item.product_name }}</td>
+                        <td><span class="badge bg-secondary bg-opacity-25 text-white border border-secondary border-opacity-25">{{ p.grocery_item.category.name }}</span></td>
+                        <td class="fw-bold">{{ p.quantity }} <span class="small text-muted">{{ p.grocery_item.unit }}</span></td>
+                        <td>{{ p.unit_price | currency }}</td>
+                        <td class="text-danger fw-bold">{{ p.total_price | currency }}</td>
+                        <td>{{ p.vendor_name or 'N/A' }}</td>
+                        <td>{{ p.recorder.username }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-5">No grocery purchases logged.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% include 'components/pagination.html' %}
+</div>
+{% endblock %}

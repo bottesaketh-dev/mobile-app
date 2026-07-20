@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk Grocery Purchase - BlueFox Ledger{% endblock %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+        <h2 class="brand-font mb-0"><i class="fa-solid fa-boxes-stacked text-saffron me-2"></i> Bulk Grocery Purchase</h2>
+        <p class="text-muted mb-0">Record multiple grocery purchases at once</p>
+    </div>
+    <div class="col-md-6 text-md-end mt-3 mt-md-0">
+        <a href="{{ url_for('expenses.grocery_list') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i> Back to Purchases
+        </a>
+    </div>
+</div>
+
+<form method="POST" action="{{ url_for('expenses.bulk_grocery_purchase') }}" id="bulk-purchase-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+    <!-- Meta Data Section -->
+    <div class="glass-card p-4 mb-4">
+        <h4 class="brand-font mb-3 text-saffron border-bottom border-secondary pb-2">Purchase Details</h4>
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <label class="form-label" for="purchase_date">Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" name="purchase_date" id="purchase_date" value="{{ today_date }}" required>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label" for="purchase_time">Time <span class="text-danger">*</span></label>
+                <input type="time" class="form-control" name="purchase_time" id="purchase_time" value="{{ today_time }}" required>
+            </div>
+            {% if current_user.is_owner %}
+            <div class="col-md-3 mb-3">
+                <label class="form-label" for="branch_id">Branch <span class="text-danger">*</span></label>
+                <select name="branch_id" id="branch_id" class="form-select" required>
+                    {% for b in branches %}
+                        <option value="{{ b.branch_id }}">{{ b.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            <div class="col-md-3 mb-3">
+                <label class="form-label" for="vendor_name">Vendor Name</label>
+                <input type="text" class="form-control" name="vendor_name" id="vendor_name" placeholder="Optional">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <label class="form-label" for="notes">Additional Notes</label>
+                <textarea class="form-control" name="notes" id="notes" rows="2" placeholder="Optional invoice refs or comments"></textarea>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Categories Accordion -->
+    <div class="accordion mb-5 pb-5" id="groceryAccordion">
+        {% for category in categories %}
+            {% if category.items %}
+            <div class="accordion-item glass-card mb-3 border-0 overflow-hidden shadow-sm">
+                <h2 class="accordion-header" id="heading-{{ category.grocery_category_id }}">
+                    <button class="accordion-button collapsed bg-white text-main fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ category.grocery_category_id }}" aria-expanded="false" aria-controls="collapse-{{ category.grocery_category_id }}">
+                        <i class="fa-solid fa-tag text-saffron me-2"></i>
+                        {{ category.name }} ({{ category.items|selectattr("is_active", "equalto", true)|list|length }} items)
+                    </button>
+                </h2>
+                <div id="collapse-{{ category.grocery_category_id }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ category.grocery_category_id }}" data-bs-parent="#groceryAccordion">
+                    <div class="accordion-body p-0 bg-white">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 40%" class="ps-4">Item Name</th>
+                                        <th style="width: 30%">Quantity Received</th>
+                                        <th style="width: 30%">Total Price (₹)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in category.items if item.is_active %}
+                                    <tr>
+                                        <td class="fw-medium ps-4 text-muted">{{ item.product_name }}</td>
+                                        <td>
+                                            <div class="input-group input-group-sm w-75">
+                                                <input type="number" step="0.01" min="0" class="form-control item-qty" name="qty_{{ item.grocery_item_id }}" data-id="{{ item.grocery_item_id }}" placeholder="0.00">
+                                                <span class="input-group-text bg-light text-muted">{{ item.unit }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="input-group input-group-sm w-75">
+                                                <span class="input-group-text bg-light text-muted">₹</span>
+                                                <input type="number" step="0.01" min="0" class="form-control item-price" name="total_{{ item.grocery_item_id }}" data-id="{{ item.grocery_item_id }}" placeholder="0.00">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    
+    <!-- Sticky Footer for Total & Submit -->
+    <div class="fixed-bottom p-3 bg-white border-top shadow-lg d-flex justify-content-between align-items-center" style="z-index: 1020; margin-left: 250px;">
+        <div>
+            <span class="text-muted fw-bold me-2">Grand Total:</span>
+            <span class="text-saffron fw-bold fs-3" id="grand-total">₹0.00</span>
+        </div>
+        <div>
+            <button type="submit" class="btn btn-saffron px-5 py-2 fw-bold shadow-sm">
+                <i class="fa-solid fa-check me-2"></i> Submit Bulk Purchase
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const priceInputs = document.querySelectorAll('.item-price');
+        const grandTotalDisplay = document.getElementById('grand-total');
+        const qtyInputs = document.querySelectorAll('.item-qty');
+        
+        function calculateGrandTotal() {
+            let total = 0;
+            priceInputs.forEach(input => {
+                const val = parseFloat(input.value);
+                if (!isNaN(val) && val > 0) {
+                    total += val;
+                }
+            });
+            grandTotalDisplay.innerText = '₹' + total.toFixed(2);
+        }
+        
+        priceInputs.forEach(input => {
+            input.addEventListener('input', calculateGrandTotal);
+        });
+
+        // Smart require: If qty > 0, price is required. If price > 0, qty is required.
+        const form = document.getElementById('bulk-purchase-form');
+        form.addEventListener('submit', function(e) {
+            let total = 0;
+            let valid = true;
+            
+            qtyInputs.forEach(qtyInput => {
+                const id = qtyInput.getAttribute('data-id');
+                const priceInput = document.querySelector(`.item-price[data-id="${id}"]`);
+                
+                const qVal = parseFloat(qtyInput.value);
+                const pVal = parseFloat(priceInput.value);
+                
+                const hasQ = !isNaN(qVal) && qVal > 0;
+                const hasP = !isNaN(pVal) && pVal > 0;
+                
+                if (hasQ && !hasP) {
+                    valid = false;
+                    priceInput.classList.add('is-invalid');
+                } else {
+                    priceInput.classList.remove('is-invalid');
+                }
+                
+                if (hasP && !hasQ) {
+                    valid = false;
+                    qtyInput.classList.add('is-invalid');
+                } else {
+                    qtyInput.classList.remove('is-invalid');
+                }
+
+                if (hasP) total += pVal;
+            });
+            
+            if (!valid) {
+                e.preventDefault();
+                alert('Please ensure both quantity and price are filled for each item you are recording.');
+            } else if (total === 0) {
+                e.preventDefault();
+                alert('Please enter quantity and total price for at least one item before submitting.');
+            }
+        });
+    });
+</script>
+<style>
+    @media (max-width: 991.98px) {
+        .fixed-bottom {
+            margin-left: 0 !important;
+        }
+    }
+</style>
+{% endblock %}

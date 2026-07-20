@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Daily Revenue - BlueFox Ledger{% endblock %}
+
+{% block content %}
+<!-- Reports Tab Switcher -->
+<div class="mb-4">
+    <div class="d-inline-flex p-1 rounded-pill border border-secondary border-opacity-10" style="background-color: var(--border-color); padding: 4px; border-radius: 50px;">
+        {% if current_user.is_owner %}
+            <a href="{{ url_for('reports.monthly_report') }}" class="btn btn-sm px-4 py-2 rounded-pill text-muted" style="text-decoration: none; border-radius: 50px;">Monthly P&L</a>
+        {% endif %}
+        <a href="{{ url_for('reports.daily_report') }}" class="btn btn-sm px-4 py-2 rounded-pill btn-saffron text-white" style="text-decoration: none; border-radius: 50px;">Daily Revenue</a>
+        <a href="{{ url_for('reports.cashflow_overview') }}" class="btn btn-sm px-4 py-2 rounded-pill text-muted" style="text-decoration: none; border-radius: 50px;">Cashflow Summary</a>
+        <a href="{{ url_for('reports.grocery_trends') }}" class="btn btn-sm px-4 py-2 rounded-pill text-muted" style="text-decoration: none; border-radius: 50px;">Grocery Trends</a>
+    </div>
+</div>
+
+<div class="row align-items-center mb-4">
+    <div class="col-12">
+        <h2 class="brand-font text-white mb-0">Daily Revenue Report</h2>
+        <p class="text-muted mb-0">Review daily sales metrics and checkout transactions history</p>
+    </div>
+</div>
+
+<!-- Period Filters -->
+<div class="glass-card p-3 mb-4">
+    <form method="GET" action="" class="row align-items-end g-3">
+        <div class="col-md-3">
+            <label class="form-label mb-1 text-muted small">Start Date</label>
+            <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label mb-1 text-muted small">End Date</label>
+            <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+        </div>
+        
+        {% if current_user.is_owner %}
+            <div class="col-md-4">
+                <label class="form-label mb-1 text-muted small">Branch Location</label>
+                <select name="branch_id" class="form-select border-secondary">
+                    <option value="0">--- All Branches Combined ---</option>
+                    {% for b in branches %}
+                        <option value="{{ b.branch_id }}" {% if selected_branch_id == b.branch_id %}selected{% endif %}>{{ b.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        {% endif %}
+        
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-outline-warning w-100 py-2">Apply Filters</button>
+        </div>
+    </form>
+</div>
+
+<!-- Line graph & Doughnut section -->
+<div class="row mb-4">
+    <div class="col-lg-8 mb-4 mb-lg-0">
+        <div class="glass-card p-4 h-100">
+            <h5 class="text-white mb-4"><i class="fa-solid fa-chart-line text-saffron me-2"></i> Daily Sales Trajectory Graph</h5>
+            <div style="height: 320px;">
+                <canvas id="dailySalesChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="glass-card p-4 h-100">
+            <h5 class="text-white mb-4"><i class="fa-solid fa-chart-pie text-saffron me-2"></i> Payment Mode Share</h5>
+            <div style="height: 320px; position: relative;">
+                <canvas id="paymentModeChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary listing Table -->
+<div class="glass-card p-4">
+    <h5 class="text-white mb-3"><i class="fa-solid fa-calendar-day text-saffron me-2"></i> Daily Sales Ledger</h5>
+    
+    <div class="table-responsive">
+        <table class="table table-custom mb-0">
+            <thead>
+                <tr>
+                    <th>Settlement Date</th>
+                    <th class="text-end">Sales Amount Settled</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in sales_data %}
+                    <tr>
+                        <td class="fw-bold text-white">{{ item.date }}</td>
+                        <td class="text-success text-end fw-bold">{{ item.amount | currency }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="2" class="text-center text-muted py-4">No sales records logged in the chosen period.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<input type="hidden" id="selected-branch-id" value="{{ selected_branch_id }}">
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const branchId = document.getElementById('selected-branch-id')?.value || 0;
+        const startDate = '{{ start_date }}';
+        const endDate = '{{ end_date }}';
+        
+        fetch(`/api/v1/reports/dashboard-charts?branch_id=${branchId}&start_date=${startDate}&end_date=${endDate}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.daily_sales) {
+                    renderChart(data.daily_sales);
+                }
+                if (data.payment_modes) {
+                    renderPaymentChart(data.payment_modes);
+                }
+            });
+            
+        function renderChart(salesData) {
+            const labels = salesData.map(item => item.date);
+            const values = salesData.map(item => item.amount);
+            
+            const ctx = document.getElementById('dailySalesChart').getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(230, 126, 34, 0.4)');
+            gradient.addColorStop(1, 'rgba(230, 126, 34, 0.01)');
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Daily Sales (₹)',
+                        data: values,
+                        borderColor: '#e67e22',
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 2,
+                        pointBackgroundColor: '#e67e22',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                            ticks: { color: '#7f8c8d' }
+                        },
+                        y: {
+                            grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                            ticks: { color: '#7f8c8d' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderPaymentChart(modesData) {
+            const labels = modesData.map(item => item.mode);
+            const values = modesData.map(item => item.amount);
+            
+            const ctx = document.getElementById('paymentModeChart').getContext('2d');
+            const chartColors = ['#d35400', '#f39c12', '#c0392b', '#1abc9c', '#3498db'];
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: chartColors.slice(0, labels.length),
+                        borderWidth: 1,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#7f8c8d',
+                                boxWidth: 12,
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

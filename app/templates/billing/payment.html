@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout Ticket #{{ order.order_id }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        <h2 class="brand-font text-white mb-4">
+            <a href="{{ url_for('billing.pos_interface', table_id=order.table_id) }}" class="text-saffron me-2 text-decoration-none"><i class="fa-solid fa-circle-arrow-left"></i></a>
+            Finalize Payout & Receipt
+        </h2>
+        
+        <div class="row g-4">
+            <!-- Left Side: Order items summary (Read only list) -->
+            <div class="col-md-6">
+                <div class="glass-card p-4 h-100">
+                    <h5 class="text-white mb-3"><i class="fa-solid fa-receipt text-saffron me-2"></i> Ticket Summary</h5>
+                    <p class="text-muted small">Order Reference: <strong>{{ order.order_id }}</strong> | Table: <strong>{{ order.table.table_id }}</strong></p>
+                    <hr class="border-secondary mb-3">
+                    
+                    <div style="max-height: 250px; overflow-y: auto;" class="mb-4">
+                        {% for item in order.items %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <div class="fw-bold text-white small">{{ item.menu_item.name }}</div>
+                                    <small class="text-muted">₹{{ item.unit_price }} x {{ item.quantity }}</small>
+                                </div>
+                                <span class="text-white fw-bold">₹{{ item.total_price }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <hr class="border-secondary pt-2">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal:</span>
+                        <span class="text-white">₹{{ totals.subtotal }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">GST Tax:</span>
+                        <span class="text-white">₹{{ totals.tax_amount }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between border-top border-secondary pt-2">
+                        <span class="fw-bold text-white">Grand Total:</span>
+                        <span class="fw-bold text-saffron fs-5" id="grand-total-val">₹{{ totals.total_amount }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Side: Checkout Payment processing Form -->
+            <div class="col-md-6">
+                <div class="glass-card p-4 h-100">
+                    <h5 class="text-white mb-4"><i class="fa-solid fa-credit-card text-saffron me-2"></i> Payout Details</h5>
+                    
+                    <form method="POST" action="">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            <label class="form-label" for="payment_mode">{{ form.payment_mode.label.text }}</label>
+                            {{ form.payment_mode(class="form-select" + (" is-invalid" if form.payment_mode.errors else "")) }}
+                            {% for error in form.payment_mode.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label" for="discount_amount">{{ form.discount_amount.label.text }}</label>
+                            {{ form.discount_amount(class="form-control" + (" is-invalid" if form.discount_amount.errors else ""), placeholder="0.00") }}
+                            {% for error in form.discount_amount.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label" for="notes">{{ form.notes.label.text }}</label>
+                            {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else ""), rows=3, placeholder="Mixed payments details, card slips references...") }}
+                            {% for error in form.notes.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        {{ form.submit(class="btn btn-saffron w-100 py-3 fw-bold fs-5") }}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const discountInput = document.getElementById('discount_amount');
+        const totalEl = document.getElementById('grand-total-val');
+        const subtotalVal = parseFloat('{{ totals.subtotal }}') || 0;
+        const taxVal = parseFloat('{{ totals.tax_amount }}') || 0;
+        
+        if (discountInput && totalEl) {
+            discountInput.addEventListener('input', function() {
+                let discount = parseFloat(this.value) || 0;
+                let newTotal = subtotalVal + taxVal - discount;
+                if (newTotal < 0) newTotal = 0;
+                totalEl.innerText = '₹' + newTotal.toFixed(2);
+            });
+        }
+    });
+</script>
+{% endblock %}

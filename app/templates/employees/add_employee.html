@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk Onboard Employees - BlueFox Ledger{% endblock %}
+
+{% block content %}
+<div class="glass-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="brand-font text-white mb-0"><i class="fa-solid fa-users text-saffron me-2"></i> Bulk Onboard Staff</h3>
+        <button type="button" id="addRowBtn" class="btn btn-outline-light"><i class="fa-solid fa-plus me-2"></i>Add Row</button>
+    </div>
+    <hr class="border-secondary mb-4">
+    
+    <form method="POST" action="">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="table-responsive" style="overflow-x: visible;">
+            <table class="table table-dark table-hover border-secondary" id="bulkEntryTable">
+                <thead>
+                    <tr>
+                        <th style="min-width: 150px;">First Name <span class="text-danger">*</span></th>
+                        <th style="min-width: 150px;">Last Name <span class="text-danger">*</span></th>
+                        <th style="min-width: 150px;">Position <span class="text-danger">*</span></th>
+                        <th style="min-width: 120px;">Phone <span class="text-danger">*</span></th>
+                        <th style="min-width: 150px;">Email</th>
+                        <th style="min-width: 120px;">Salary (₹) <span class="text-danger">*</span></th>
+                        <th style="min-width: 140px;">Join Date <span class="text-danger">*</span></th>
+                        <th style="min-width: 150px;">Branch <span class="text-danger">*</span></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td><input type="text" name="first_name[]" class="form-control form-control-sm" required></td>
+                        <td><input type="text" name="last_name[]" class="form-control form-control-sm" required></td>
+                        <td><input type="text" name="position[]" class="form-control form-control-sm" required></td>
+                        <td><input type="text" name="phone[]" class="form-control form-control-sm" required></td>
+                        <td><input type="email" name="email[]" class="form-control form-control-sm"></td>
+                        <td><input type="number" step="0.01" min="0" name="monthly_salary[]" class="form-control form-control-sm" required></td>
+                        <td><input type="date" name="join_date[]" class="form-control form-control-sm" value="{{ default_date }}" required></td>
+                        <td>
+                            <select name="branch_id[]" class="form-select form-select-sm" required>
+                                {% for branch in branches %}
+                                <option value="{{ branch.branch_id }}">{{ branch.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td class="text-center align-middle">
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Remove"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="d-flex justify-content-end gap-2 mt-4">
+            <a href="{{ url_for('employees.employee_list') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+            <button type="submit" class="btn btn-saffron px-4">Onboard Employees</button>
+        </div>
+    </form>
+</div>
+
+<template id="rowTemplate">
+    <tr>
+        <td><input type="text" name="first_name[]" class="form-control form-control-sm" required></td>
+        <td><input type="text" name="last_name[]" class="form-control form-control-sm" required></td>
+        <td><input type="text" name="position[]" class="form-control form-control-sm" required></td>
+        <td><input type="text" name="phone[]" class="form-control form-control-sm" required></td>
+        <td><input type="email" name="email[]" class="form-control form-control-sm"></td>
+        <td><input type="number" step="0.01" min="0" name="monthly_salary[]" class="form-control form-control-sm" required></td>
+        <td><input type="date" name="join_date[]" class="form-control form-control-sm" value="{{ default_date }}" required></td>
+        <td>
+            <select name="branch_id[]" class="form-select form-select-sm" required>
+                {% for branch in branches %}
+                <option value="{{ branch.branch_id }}">{{ branch.name }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td class="text-center align-middle">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Remove"><i class="fa-solid fa-trash"></i></button>
+        </td>
+    </tr>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tableBody = document.getElementById('tableBody');
+    const addRowBtn = document.getElementById('addRowBtn');
+    const rowTemplate = document.getElementById('rowTemplate');
+
+    addRowBtn.addEventListener('click', function() {
+        const newRow = rowTemplate.content.cloneNode(true);
+        tableBody.appendChild(newRow);
+    });
+
+    tableBody.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-row')) {
+            const row = e.target.closest('tr');
+            if (tableBody.querySelectorAll('tr').length > 1) {
+                row.remove();
+            } else {
+                alert("You must have at least one row.");
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

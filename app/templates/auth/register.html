@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Register Staff - BlueFox Ledger{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="glass-card p-4">
+            <h3 class="brand-font text-white mb-4"><i class="fa-solid fa-user-plus text-saffron me-2"></i> Register New Staff Member</h3>
+            <hr class="border-secondary mb-4">
+            
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="username">{{ form.username.label.text }}</label>
+                        {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""), placeholder="e.g. rohit_sharma") }}
+                        {% for error in form.username.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="email">{{ form.email.label.text }}</label>
+                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="name@restaurant.com") }}
+                        {% for error in form.email.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="role">{{ form.role.label.text }}</label>
+                        {{ form.role(class="form-select" + (" is-invalid" if form.role.errors else "")) }}
+                        {% for error in form.role.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="branch_id">{{ form.branch_id.label.text }}</label>
+                        {{ form.branch_id(class="form-select" + (" is-invalid" if form.branch_id.errors else "")) }}
+                        {% for error in form.branch_id.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label" for="password">{{ form.password.label.text }}</label>
+                        {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="At least 6 characters") }}
+                        {% for error in form.password.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label" for="confirm_password">{{ form.confirm_password.label.text }}</label>
+                        {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else ""), placeholder="Re-type password") }}
+                        {% for error in form.confirm_password.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('dashboard.owner_dashboard') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+                    {{ form.submit(class="btn btn-saffron px-4") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

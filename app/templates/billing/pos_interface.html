@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}POS Interface - Table {{ table.table_id }}{% endblock %}
+
+{% block styles %}
+<link href="{{ url_for('static', filename='css/billing.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<input type="hidden" id="pos-order-id" value="{{ order.order_id }}">
+<input type="hidden" id="csrf_token" value="{{ csrf_token() }}">
+
+<div class="row align-items-center mb-3">
+    <div class="col-8">
+        <h2 class="brand-font text-white mb-0">
+            <a href="{{ url_for('billing.table_view') }}" class="text-saffron me-2 text-decoration-none"><i class="fa-solid fa-circle-arrow-left"></i></a>
+            Table {{ table.table_id }} POS Menu
+        </h2>
+        <p class="text-muted mb-0">Ticket Number: <strong class="text-white">{{ order.order_id }}</strong> | Capacity: <strong>{{ table.capacity }} Seater</strong></p>
+    </div>
+    <div class="col-4 text-end">
+        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2 text-uppercase"><i class="fa-solid fa-receipt me-1"></i> {{ order.status }}</span>
+    </div>
+</div>
+
+<div class="pos-container">
+    <!-- Left Column: Menu Items Search & Categories grid -->
+    <div class="pos-menu-section glass-card p-3">
+        <!-- Search bar -->
+        <div class="mb-3">
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input type="text" id="item-search" class="form-control" placeholder="Search dish item name...">
+            </div>
+        </div>
+        
+        <!-- Category Pills Scroll -->
+        <div class="category-scroll mb-3">
+            <div class="category-pill active" data-category="all">All Dishes</div>
+            {% for cat, items in categorized_items.items() %}
+                <div class="category-pill" data-category="{{ cat }}">{{ cat }}</div>
+            {% endfor %}
+        </div>
+        
+        <!-- Grid Items -->
+        <div class="pos-items-grid">
+            {% for cat, items in categorized_items.items() %}
+                {% for item in items %}
+                    <div class="pos-item-card" data-id="{{ item.menu_item_id }}" data-category="{{ item.category }}" data-name="{{ item.name }}">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <span class="fw-bold text-white fs-6" style="line-height: 1.2;">{{ item.name }}</span>
+                                {% if item.is_vegetarian %}
+                                    <span class="veg-indicator"><span class="veg-dot"></span></span>
+                                {% else %}
+                                    <span class="nonveg-indicator"><span class="nonveg-dot"></span></span>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted text-truncate d-block" style="font-size: 0.75rem;">{{ item.description or '' }}</small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <span class="text-saffron fw-bold fs-6">₹{{ item.price }}</span>
+                            <span class="btn btn-sm btn-outline-warning rounded-circle p-1" style="width: 24px; height: 24px; line-height: 10px;"><i class="fa-solid fa-plus" style="font-size: 0.7rem;"></i></span>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Right Column: Cart items running listing -->
+    <div class="pos-cart-section">
+        <div class="glass-card p-3 d-flex flex-column h-100 w-100">
+            <h5 class="text-white mb-3"><i class="fa-solid fa-basket-shopping text-saffron me-2"></i> Current Bill Items</h5>
+            <hr class="border-secondary m-0 mb-3">
+            
+            <!-- Cart items list (populated via AJAX in billing.js) -->
+            <div class="cart-items-list" id="cart-items-list">
+                <!-- Javascript injector -->
+            </div>
+            
+            <!-- Checkout Summary computations -->
+            <div class="mt-auto border-top border-secondary pt-3">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Subtotal:</span>
+                    <span class="text-white fw-bold" id="summary-subtotal">₹0.00</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">GST Tax Amount:</span>
+                    <span class="text-white fw-bold" id="summary-tax">₹0.00</span>
+                </div>
+                <div class="d-flex justify-content-between mb-4 border-top border-secondary pt-2">
+                    <span class="fs-5 fw-bold text-white">Grand Total:</span>
+                    <span class="fs-5 fw-bold text-saffron" id="summary-total">₹0.00</span>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('billing.table_view') }}" class="btn btn-outline-secondary w-50 py-2">Hold Order</a>
+                    <a href="{{ url_for('billing.checkout', order_id=order.order_id) }}" class="btn btn-saffron w-50 py-2 fw-bold">Checkout & Pay</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/billing.js') }}"></script>
+{% endblock %}

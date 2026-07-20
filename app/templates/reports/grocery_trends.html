@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Grocery Trends - BlueFox Ledger{% endblock %}
+
+{% block content %}
+<!-- Reports Tab Switcher -->
+<div class="mb-4">
+    <div class="d-inline-flex p-1 rounded-pill border border-secondary border-opacity-10" style="background-color: var(--border-color); padding: 4px; border-radius: 50px;">
+        {% if current_user.is_owner %}
+            <a href="{{ url_for('reports.monthly_report') }}" class="btn btn-sm px-4 py-2 rounded-pill text-muted" style="text-decoration: none; border-radius: 50px;">Monthly P&L</a>
+        {% endif %}
+        <a href="{{ url_for('reports.daily_report') }}" class="btn btn-sm px-4 py-2 rounded-pill text-muted" style="text-decoration: none; border-radius: 50px;">Daily Revenue</a>
+        <a href="{{ url_for('reports.cashflow_overview') }}" class="btn btn-sm px-4 py-2 rounded-pill text-muted" style="text-decoration: none; border-radius: 50px;">Cashflow Summary</a>
+        <a href="{{ url_for('reports.grocery_trends') }}" class="btn btn-sm px-4 py-2 rounded-pill btn-saffron text-white" style="text-decoration: none; border-radius: 50px;">Grocery Trends</a>
+    </div>
+</div>
+
+<div class="row align-items-center mb-4">
+    <div class="col-12">
+        <h2 class="brand-font text-white mb-0">Grocery Price Trends</h2>
+        <p class="text-muted mb-0">Analyze unit price fluctuations of ingredients over time</p>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="glass-card p-3 mb-4">
+    <form method="GET" action="" class="row align-items-end g-3">
+        <!-- Start Date -->
+        <div class="col-md-2">
+            <label class="form-label mb-1 text-muted small">Start Date</label>
+            <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+        </div>
+        
+        <!-- End Date -->
+        <div class="col-md-2">
+            <label class="form-label mb-1 text-muted small">End Date</label>
+            <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+        </div>
+        
+        <!-- Grocery Item -->
+        <div class="col-md-4">
+            <label class="form-label mb-1 text-muted small">Grocery Item</label>
+            <select name="grocery_item_id" class="form-select border-secondary">
+                <option value="">-- Select an item to analyze --</option>
+                {% for item in grocery_items %}
+                    <option value="{{ item.grocery_item_id }}" {% if selected_item_id == item.grocery_item_id %}selected{% endif %}>{{ item.product_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Branch (Owner only) -->
+        {% if current_user.is_owner %}
+            <div class="col-md-2">
+                <label class="form-label mb-1 text-muted small">Branch</label>
+                <select name="branch_id" class="form-select border-secondary">
+                    <option value="0">--- All ---</option>
+                    {% for b in branches %}
+                        <option value="{{ b.branch_id }}" {% if selected_branch_id == b.branch_id %}selected{% endif %}>{{ b.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        {% endif %}
+        
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-outline-warning w-100 py-2">Analyze</button>
+        </div>
+    </form>
+</div>
+
+{% if selected_item %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4 h-100">
+                <h5 class="text-white mb-4"><i class="fa-solid fa-chart-line text-saffron me-2"></i> Price Trend: {{ selected_item.product_name }} (per {{ selected_item.unit }})</h5>
+                {% if trend_data %}
+                <div style="height: 350px;">
+                    <canvas id="trendChart"></canvas>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fa-solid fa-chart-line text-muted fa-3x mb-3"></i>
+                    <p class="text-muted mt-3">No purchase data available for this item in the selected date range.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    {% if purchases %}
+    <div class="glass-card p-4 mb-4">
+        <h5 class="text-white mb-3"><i class="fa-solid fa-list text-saffron me-2"></i> Raw Purchase Data</h5>
+        <div class="table-responsive">
+            <table class="table table-custom mb-0">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Vendor</th>
+                        {% if current_user.is_owner %}
+                        <th>Branch</th>
+                        {% endif %}
+                        <th>Quantity</th>
+                        <th>Total Price</th>
+                        <th>Unit Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in purchases %}
+                        <tr>
+                            <td class="text-white fw-bold">{{ p.purchase_date | date_format }}</td>
+                            <td>{{ p.vendor_name or '-' }}</td>
+                            {% if current_user.is_owner %}
+                            <td>{{ p.branch.name }}</td>
+                            {% endif %}
+                            <td>{{ p.quantity }} {{ p.grocery_item.unit }}</td>
+                            <td>{{ p.total_price | currency }}</td>
+                            <td class="text-warning fw-bold">{{ p.unit_price | currency }} / {{ p.grocery_item.unit }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+{% else %}
+    <div class="glass-card p-5 text-center mb-4">
+        <i class="fa-solid fa-magnifying-glass-chart text-muted fa-3x mb-3"></i>
+        <h4 class="text-white">Select a Grocery Item</h4>
+        <p class="text-muted mb-0">Choose an item from the dropdown above to view its price fluctuations over time.</p>
+    </div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+{% if trend_data %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const rawData = {{ trend_data | tojson | safe }};
+        
+        const labels = rawData.map(item => item.date);
+        const values = rawData.map(item => item.avg_price);
+        
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(230, 126, 34, 0.4)');
+        gradient.addColorStop(1, 'rgba(230, 126, 34, 0.01)');
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Avg Unit Price (₹)',
+                    data: values,
+                    borderColor: '#e67e22',
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.1,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#e67e22',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: '#7f8c8d' }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                        ticks: { color: '#7f8c8d' }
+                    },
+                    y: {
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                        ticks: { color: '#7f8c8d' },
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

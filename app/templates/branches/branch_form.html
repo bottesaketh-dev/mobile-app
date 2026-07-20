@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if is_edit %}Edit Branch - {{ branch.name }}{% else %}Add New Branch{% endif %} - BlueFox Ledger
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="d-flex align-items-center mb-4">
+            <a href="{{ url_for('branch.branch_list') }}" class="btn btn-outline-secondary me-3">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+            <div>
+                <h2 class="brand-font text-white mb-0">{% if is_edit %}Edit Branch{% else %}Add New Branch{% endif %}</h2>
+                {% if is_edit %}
+                    <p class="text-muted mb-0">Updating branch #{{ branch.branch_id }}</p>
+                {% else %}
+                    <p class="text-muted mb-0">Register a new physical location</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="glass-card p-4">
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                
+                <div class="mb-3">
+                    {{ form.name.label(class="form-label text-white") }}
+                    {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="e.g. Downtown Branch") }}
+                    {% if form.name.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.name.errors %}<span>{{ error }}</span>{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    {{ form.address.label(class="form-label text-white") }}
+                    {{ form.address(class="form-control" + (" is-invalid" if form.address.errors else ""), rows="3", placeholder="Full physical address") }}
+                    {% if form.address.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.address.errors %}<span>{{ error }}</span>{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-4">
+                    {{ form.phone.label(class="form-label text-white") }}
+                    {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else ""), placeholder="+91 XXXXX XXXXX") }}
+                    {% if form.phone.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.phone.errors %}<span>{{ error }}</span>{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-4 form-check form-switch custom-switch">
+                    {{ form.is_active(class="form-check-input") }}
+                    {{ form.is_active.label(class="form-check-label text-white") }}
+                    <div class="form-text text-muted">Inactive branches are hidden from active menus and POS screens.</div>
+                </div>
+                
+                <div class="d-grid mt-4">
+                    {{ form.submit(class="btn btn-saffron btn-lg") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

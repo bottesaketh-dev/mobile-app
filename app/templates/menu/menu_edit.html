@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Menu Item - BlueFox Ledger{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="glass-card p-4">
+            <h3 class="brand-font text-white mb-4"><i class="fa-solid fa-pen-to-square text-saffron me-2"></i> Edit Menu Item</h3>
+            <p class="text-muted small">Modifying: <strong>{{ item.name }}</strong></p>
+            <hr class="border-secondary mb-4">
+            
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                
+                <div class="mb-3">
+                    <label class="form-label" for="name">{{ form.name.label.text }}</label>
+                    {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                    {% for error in form.name.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label" for="description">{{ form.description.label.text }}</label>
+                    {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=3) }}
+                    {% for error in form.description.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="category">{{ form.category.label.text }}</label>
+                        {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
+                        {% for error in form.category.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="price">{{ form.price.label.text }}</label>
+                        {{ form.price(class="form-control" + (" is-invalid" if form.price.errors else "")) }}
+                        {% for error in form.price.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label" for="image_url">{{ form.image_url.label.text }}</label>
+                    {{ form.image_url(class="form-control" + (" is-invalid" if form.image_url.errors else "")) }}
+                    {% for error in form.image_url.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label" for="branch_id">{{ form.branch_id.label.text }}</label>
+                    {{ form.branch_id(class="form-select" + (" is-invalid" if form.branch_id.errors else "")) }}
+                    {% for error in form.branch_id.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <div class="form-check form-switch pt-2">
+                            {{ form.is_vegetarian(class="form-check-input") }}
+                            <label class="form-check-label text-white" for="is_vegetarian">{{ form.is_vegetarian.label.text }}</label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-check form-switch pt-2">
+                            {{ form.is_available(class="form-check-input") }}
+                            <label class="form-check-label text-white" for="is_available">{{ form.is_available.label.text }}</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('menu.menu_list') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+                    {{ form.submit(class="btn btn-saffron px-4") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

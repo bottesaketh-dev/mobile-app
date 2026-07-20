@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Add Grocery Item - BlueFox Ledger{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="glass-card p-4">
+            <h3 class="brand-font text-white mb-4"><i class="fa-solid fa-basket-shopping text-saffron me-2"></i> Create Grocery Product Profile</h3>
+            <p class="text-muted small">Once created, this item will become searchable when logging purchases.</p>
+            <hr class="border-secondary mb-4">
+            
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                
+                <div class="mb-3">
+                    <label class="form-label" for="product_name">{{ form.product_name.label.text }}</label>
+                    {{ form.product_name(class="form-control" + (" is-invalid" if form.product_name.errors else ""), placeholder="e.g. Paneer Cottage Cheese") }}
+                    {% for error in form.product_name.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label" for="category_id">{{ form.category_id.label.text }}</label>
+                    {{ form.category_id(class="form-select" + (" is-invalid" if form.category_id.errors else "")) }}
+                    {% for error in form.category_id.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label" for="unit">{{ form.unit.label.text }}</label>
+                    {{ form.unit(class="form-select" + (" is-invalid" if form.unit.errors else "")) }}
+                    {% for error in form.unit.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('expenses.grocery_list') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+                    {{ form.submit(class="btn btn-saffron px-4") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

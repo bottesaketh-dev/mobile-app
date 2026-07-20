@@ -134,3 +134,13 @@ dependencies {
     
     testImplementation("junit:junit:4.13.2")
 }
+
+// Ensure BuildConfig is regenerated whenever the .env file is updated
+tasks.configureEach {
+    if (name.contains("generateBuildConfig", ignoreCase = true)) {
+        val envFile = project.rootProject.file(".env")
+        if (envFile.exists()) {
+            inputs.file(envFile)
+        }
+    }
+}

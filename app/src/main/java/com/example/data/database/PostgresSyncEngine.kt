@@ -555,8 +555,22 @@ object PostgresSyncEngine {
             }
 
             val columnsCsv = columnNames.joinToString(", ")
-            val placeholders = columnNames.joinToString(", ") { "?" }
-            val updates = columnNames.filter { it != primaryKeyColumn }.joinToString(", ") { "$it = EXCLUDED.$it" }
+            val placeholders = columnNames.map { col ->
+                when {
+                    col.endsWith("_at") -> "?::timestamp"
+                    col.endsWith("_date") || col == "join_date" -> "?::date"
+                    col.endsWith("_time") -> "?::time"
+                    else -> "?"
+                }
+            }.joinToString(", ")
+            val updates = columnNames.filter { it != primaryKeyColumn }.joinToString(", ") { col ->
+                when {
+                    col.endsWith("_at") -> "$col = EXCLUDED.$col::timestamp"
+                    col.endsWith("_date") || col == "join_date" -> "$col = EXCLUDED.$col::date"
+                    col.endsWith("_time") -> "$col = EXCLUDED.$col::time"
+                    else -> "$col = EXCLUDED.$col"
+                }
+            }
 
             val sql = """
                 INSERT INTO $tableName ($columnsCsv) 
@@ -577,7 +591,7 @@ object PostgresSyncEngine {
             }
         } catch (e: Throwable) {
             Log.e(TAG, "Error pushing table $tableName: ${e.javaClass.simpleName}: ${e.message}", e)
-            // Don't re-throw — a push failure for one table shouldn't abort the whole sync
+            throw e // Re-throw to propagate sync failures
         }
     }
 

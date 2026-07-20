@@ -1,0 +1,66 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  # Allow manual trigger from GitHub UI
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Debug APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check out the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Set up JDK 21 (matches your build.gradle.kts jvmTarget)
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      # 3. Make gradlew executable (Linux requirement)
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # 4. Create a .env file from GitHub Secrets so Gradle can read DATABASE_URL etc.
+      - name: Create .env file from secrets
+        run: |
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+          echo "GITHUB_TOKEN=${{ secrets.APP_GITHUB_TOKEN }}" >> .env
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+          echo "CURRENCY=${{ secrets.CURRENCY }}" >> .env
+          echo "TIMEZONE=${{ secrets.TIMEZONE }}" >> .env
+
+      # 5. Build the debug APK
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace
+        env:
+          # Pass secrets directly as env vars too (belt-and-suspenders)
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GITHUB_TOKEN: ${{ secrets.APP_GITHUB_TOKEN }}
+
+      # 6. Upload the APK as a downloadable artifact (available for 30 days)
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BlueFoxLedger-debug-${{ github.run_number }}
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+
+      # 7. (Optional) Also create a GitHub Release on tags like v1.0.0
+      - name: Create Release on Tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: app/build/outputs/apk/debug/app-debug.apk
+          name: BlueFox Ledger ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
